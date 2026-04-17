@@ -1,5 +1,7 @@
 # Intranet social MVP (base técnica)
 
+> Resolución de merge: se prioriza la versión validada más reciente del core.
+
 Base inicial para una intranet social simple con:
 - Next.js (App Router)
 - Supabase (Auth + Postgres + Storage)
