@@ -1,3 +1,4 @@
+-- Schema mínimo del MVP (idempotente y re-ejecutable)
 -- Extensiones
 create extension if not exists "pgcrypto";
 

@@ -13,7 +13,7 @@ Base inicial para una intranet social simple con:
 - **Protección de rutas por sesión y rol** en `middleware.ts`:
   - si no hay sesión redirige a `/login`
   - si hay sesión y entra a `/login` redirige a `/dashboard`
-  - si intenta entrar a `/admin*` valida rol en `profiles.role` y bloquea a no-admin.【`middleware.ts`】
+  - si intenta entrar a `/admin*` valida rol en `profiles.role` y bloquea a no-admin.
 - **Auth con Supabase**:
   - login email/password con `signInWithPassword`
   - logout con server action y `supabase.auth.signOut()`.
