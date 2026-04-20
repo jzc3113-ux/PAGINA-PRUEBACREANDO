@@ -2,8 +2,9 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { getSupabaseEnv } from './env';
 
-export async function createServerSupabaseClient() {
-  const cookieStore = await cookies();
+// Server client compatible con App Router actual (cookies() síncrono y estable para SSR)
+export function createServerSupabaseClient() {
+  const cookieStore = cookies();
   const { url, anonKey } = getSupabaseEnv();
 
   return createServerClient(url, anonKey, {

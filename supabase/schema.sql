@@ -1,8 +1,15 @@
+-- Schema mínimo del MVP (idempotente, re-ejecutable y merge-safe)
 -- Extensiones
 create extension if not exists "pgcrypto";
 
--- Roles de app
-create type app_role as enum ('admin', 'user');
+-- Roles de app (idempotente)
+do $$
+begin
+  if not exists (select 1 from pg_type where typname = 'app_role') then
+    create type app_role as enum ('admin', 'user');
+  end if;
+end
+$$;
 
 -- Perfil de usuario (1 a 1 con auth.users)
 create table if not exists public.profiles (
@@ -73,13 +80,6 @@ create trigger on_auth_user_created
 after insert on auth.users
 for each row execute procedure public.handle_new_user();
 
--- RLS
-alter table public.profiles enable row level security;
-alter table public.posts enable row level security;
-alter table public.groups enable row level security;
-alter table public.group_members enable row level security;
-alter table public.documents enable row level security;
-
 -- Helper para validar admin
 create or replace function public.is_admin()
 returns boolean
@@ -92,6 +92,36 @@ as $$
     where p.id = auth.uid() and p.role = 'admin'
   );
 $$;
+
+-- RLS
+alter table public.profiles enable row level security;
+alter table public.posts enable row level security;
+alter table public.groups enable row level security;
+alter table public.group_members enable row level security;
+alter table public.documents enable row level security;
+
+-- Recrear policies para que el script sea re-ejecutable
+
+drop policy if exists "profiles_select_own_or_admin" on public.profiles;
+drop policy if exists "profiles_update_own_or_admin" on public.profiles;
+
+drop policy if exists "posts_read_authenticated" on public.posts;
+drop policy if exists "posts_insert_own" on public.posts;
+drop policy if exists "posts_update_own_or_admin" on public.posts;
+drop policy if exists "posts_delete_own_or_admin" on public.posts;
+
+drop policy if exists "groups_read_authenticated" on public.groups;
+drop policy if exists "groups_insert_authenticated" on public.groups;
+drop policy if exists "groups_update_admin" on public.groups;
+
+drop policy if exists "group_members_read_authenticated" on public.group_members;
+drop policy if exists "group_members_insert_admin" on public.group_members;
+drop policy if exists "group_members_delete_admin" on public.group_members;
+
+drop policy if exists "documents_read_authenticated" on public.documents;
+drop policy if exists "documents_insert_owner" on public.documents;
+drop policy if exists "documents_update_owner_or_admin" on public.documents;
+drop policy if exists "documents_delete_owner_or_admin" on public.documents;
 
 -- Policies: profiles
 create policy "profiles_select_own_or_admin" on public.profiles
