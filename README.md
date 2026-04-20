@@ -31,6 +31,8 @@ Base inicial para una intranet social simple con:
 
 Pantallas base con contenido mínimo (compilan, pero sin lógica de negocio completa):
 - `/dashboard`
+- `/perfil`
+- `/publicaciones`
 - `/grupos`
 - `/documentos`
 - `/admin`
@@ -40,7 +42,7 @@ Esto está alineado con el requerimiento de funcionalidad primero y base para it
 
 ### ⏳ Pendiente para siguiente fase (no bloquea la base)
 
-- CRUD real de grupos/documentos y refinamiento de perfil/publicaciones.
+- CRUD real de perfil/publicaciones/grupos/documentos.
 - Gestión real de usuarios/roles desde `/admin/users`.
 - Integración completa de Supabase Storage en UI (ahora sólo está modelado en DB).
 - Métricas reales en dashboard admin (actualmente placeholder).
@@ -105,6 +107,8 @@ Públicas:
 
 Usuario autenticado:
 - `/dashboard`
+- `/perfil`
+- `/publicaciones`
 - `/grupos`
 - `/documentos`
 
