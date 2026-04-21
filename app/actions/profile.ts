@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export async function updateProfile(formData: FormData) {
@@ -10,13 +11,13 @@ export async function updateProfile(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return;
+    redirect('/login');
   }
 
   const fullName = String(formData.get('full_name') ?? '').trim();
   const avatarUrl = String(formData.get('avatar_url') ?? '').trim();
 
-  await supabase
+  const { error } = await supabase
     .from('profiles')
     .update({
       full_name: fullName,
@@ -26,4 +27,10 @@ export async function updateProfile(formData: FormData) {
     .eq('id', user.id);
 
   revalidatePath('/perfil');
+
+  if (error) {
+    redirect('/perfil?status=error');
+  }
+
+  redirect('/perfil?status=saved');
 }

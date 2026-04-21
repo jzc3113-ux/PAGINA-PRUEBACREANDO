@@ -2,7 +2,31 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getUserRole } from '@/lib/auth/roles';
 import { createPost, deletePost, updatePost } from '@/app/actions/posts';
 
-export default async function PublicacionesPage() {
+type PublicacionesPageProps = {
+  searchParams?: {
+    status?: string;
+  };
+};
+
+function StatusMessage({ status }: { status?: string }) {
+  if (!status) return null;
+
+  const statusMap: Record<string, { text: string; color: string }> = {
+    created: { text: 'Publicación creada.', color: '#166534' },
+    updated: { text: 'Publicación actualizada.', color: '#166534' },
+    deleted: { text: 'Publicación eliminada.', color: '#166534' },
+    invalid: { text: 'Completa título y contenido.', color: '#b91c1c' },
+    forbidden: { text: 'No tienes permiso para esta acción.', color: '#b91c1c' },
+    error: { text: 'Ocurrió un error al guardar los cambios.', color: '#b91c1c' }
+  };
+
+  const message = statusMap[status];
+  if (!message) return null;
+
+  return <p style={{ color: message.color }}>{message.text}</p>;
+}
+
+export default async function PublicacionesPage({ searchParams }: PublicacionesPageProps) {
   const supabase = createServerSupabaseClient();
   const {
     data: { user }
@@ -29,6 +53,7 @@ export default async function PublicacionesPage() {
       <section className="card">
         <h1>Publicaciones</h1>
         <p>Crea y gestiona publicaciones internas.</p>
+        <StatusMessage status={searchParams?.status} />
 
         <form action={createPost}>
           <label htmlFor="title">Título</label>
