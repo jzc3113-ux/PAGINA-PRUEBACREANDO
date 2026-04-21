@@ -34,13 +34,14 @@ Pantallas base con contenido mínimo (compilan, pero sin lógica de negocio comp
 - `/grupos`
 - `/documentos`
 - `/admin`
+- `/admin/users`
 
 Esto está alineado con el requerimiento de funcionalidad primero y base para iterar por módulos.
 
 ### ⏳ Pendiente para siguiente fase (no bloquea la base)
 
 - CRUD real de grupos/documentos y refinamiento de perfil/publicaciones.
-- Refinamientos de UX para gestión de usuarios/roles en `/admin/users`.
+- Gestión real de usuarios/roles desde `/admin/users`.
 - Integración completa de Supabase Storage en UI (ahora sólo está modelado en DB).
 - Métricas reales en dashboard admin (actualmente placeholder).
 - E2E/manual QA completo en entorno con `npm install` disponible.
@@ -111,6 +112,7 @@ Usuario autenticado:
 
 Administrador (solo rol admin):
 - `/admin`
+- `/admin/users`
 
 ## 4) Autenticación
 
