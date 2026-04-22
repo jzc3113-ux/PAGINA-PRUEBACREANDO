@@ -117,11 +117,15 @@ drop policy if exists "groups_update_admin" on public.groups;
 drop policy if exists "group_members_read_authenticated" on public.group_members;
 drop policy if exists "group_members_insert_admin" on public.group_members;
 drop policy if exists "group_members_delete_admin" on public.group_members;
+drop policy if exists "group_members_insert_self_or_admin" on public.group_members;
+drop policy if exists "group_members_delete_self_or_admin" on public.group_members;
 
 drop policy if exists "documents_read_authenticated" on public.documents;
 drop policy if exists "documents_insert_owner" on public.documents;
 drop policy if exists "documents_update_owner_or_admin" on public.documents;
 drop policy if exists "documents_delete_owner_or_admin" on public.documents;
+drop policy if exists "documents_read_owner_group_or_admin" on public.documents;
+drop policy if exists "documents_insert_owner_group_member_or_admin" on public.documents;
 
 -- Policies: profiles
 create policy "profiles_select_own_or_admin" on public.profiles
@@ -160,18 +164,42 @@ with check (public.is_admin());
 create policy "group_members_read_authenticated" on public.group_members
 for select to authenticated using (true);
 
-create policy "group_members_insert_admin" on public.group_members
-for insert to authenticated with check (public.is_admin());
+create policy "group_members_insert_self_or_admin" on public.group_members
+for insert to authenticated with check (user_id = auth.uid() or public.is_admin());
 
-create policy "group_members_delete_admin" on public.group_members
-for delete to authenticated using (public.is_admin());
+create policy "group_members_delete_self_or_admin" on public.group_members
+for delete to authenticated using (user_id = auth.uid() or public.is_admin());
 
 -- Policies: documents
-create policy "documents_read_authenticated" on public.documents
-for select to authenticated using (true);
+create policy "documents_read_owner_group_or_admin" on public.documents
+for select to authenticated using (
+  owner_id = auth.uid()
+  or public.is_admin()
+  or (
+    group_id is not null
+    and exists (
+      select 1
+      from public.group_members gm
+      where gm.group_id = documents.group_id
+        and gm.user_id = auth.uid()
+    )
+  )
+);
 
-create policy "documents_insert_owner" on public.documents
-for insert to authenticated with check (owner_id = auth.uid() or public.is_admin());
+create policy "documents_insert_owner_group_member_or_admin" on public.documents
+for insert to authenticated with check (
+  owner_id = auth.uid()
+  and (
+    group_id is null
+    or public.is_admin()
+    or exists (
+      select 1
+      from public.group_members gm
+      where gm.group_id = documents.group_id
+        and gm.user_id = auth.uid()
+    )
+  )
+);
 
 create policy "documents_update_owner_or_admin" on public.documents
 for update to authenticated using (owner_id = auth.uid() or public.is_admin())
@@ -179,3 +207,22 @@ with check (owner_id = auth.uid() or public.is_admin());
 
 create policy "documents_delete_owner_or_admin" on public.documents
 for delete to authenticated using (owner_id = auth.uid() or public.is_admin());
+
+-- Storage (bucket para documentos)
+insert into storage.buckets (id, name, public)
+values ('documents', 'documents', false)
+on conflict (id) do nothing;
+
+drop policy if exists "documents_storage_select" on storage.objects;
+drop policy if exists "documents_storage_insert" on storage.objects;
+
+create policy "documents_storage_select" on storage.objects
+for select to authenticated
+using (bucket_id = 'documents');
+
+create policy "documents_storage_insert" on storage.objects
+for insert to authenticated
+with check (
+  bucket_id = 'documents'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);

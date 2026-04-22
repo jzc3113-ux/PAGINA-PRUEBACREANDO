@@ -5,14 +5,14 @@ import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getUserRole } from '@/lib/auth/roles';
 
-async function getAuthContext() {
+async function requireAuthContext() {
   const supabase = createServerSupabaseClient();
   const {
     data: { user }
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return null;
+    redirect('/login');
   }
 
   const role = await getUserRole(supabase, user);
@@ -20,8 +20,7 @@ async function getAuthContext() {
 }
 
 export async function createPost(formData: FormData) {
-  const context = await getAuthContext();
-  if (!context) redirect('/login');
+  const context = await requireAuthContext();
 
   const title = String(formData.get('title') ?? '').trim();
   const content = String(formData.get('content') ?? '').trim();
@@ -41,8 +40,7 @@ export async function createPost(formData: FormData) {
 }
 
 export async function updatePost(formData: FormData) {
-  const context = await getAuthContext();
-  if (!context) redirect('/login');
+  const context = await requireAuthContext();
 
   const postId = String(formData.get('post_id') ?? '');
   const title = String(formData.get('title') ?? '').trim();
@@ -73,8 +71,7 @@ export async function updatePost(formData: FormData) {
 }
 
 export async function deletePost(formData: FormData) {
-  const context = await getAuthContext();
-  if (!context) redirect('/login');
+  const context = await requireAuthContext();
 
   const postId = String(formData.get('post_id') ?? '');
   if (!postId) {
